@@ -1,0 +1,29 @@
+{
+    "Total runtime": 10.055395,
+    "Candidate_scraper": {
+        "total_runtime": 0.011011,
+        "entries": []
+    },
+    "Job_scraper": {
+        "total_runtime": 4.020907,
+        "entries": [
+            {
+                "message": "Logger started for Job_scraper",
+                "runtime": 2.01283
+            },
+            {
+                "message": "Did the first two",
+                "runtime": 2.008077
+            }
+        ]
+    },
+    "Good_scraper": {
+        "total_runtime": 2.011829,
+        "entries": [
+            {
+                "message": "Logger started for Good_scraper",
+                "runtime": 2.011829
+            }
+        ]
+    }
+}

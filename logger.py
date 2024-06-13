@@ -143,12 +143,12 @@ class SQL_mini_wizard:
         if cls._instance is None:
             engine = cls.create_engine(type='sqlite')
             if engine.type == 'sqlite':
+                cls._delete_table(engine)
                 cls.create_table(engine)
-            session_maker = sessionmaker(bind=engine)
-            etl_id = cls.get_etl_id(session_maker)
+            etl_id = cls.get_etl_id(engine)
             cls._instance = {
                 'engine': engine,
-                'session_maker': session_maker,
+                'session_maker': sessionmaker(engine),
                 'etl_id': etl_id
             }
         return cls._instance
@@ -180,13 +180,15 @@ class SQL_mini_wizard:
             raise Exception(f'failed to establish logging connection to db with error: {e}')
     
     @staticmethod
-    def get_etl_id(session_maker):
+    def get_etl_id(engine):
         """
         This function gets a new etl_id from the database
         """
         try:
-            with session_maker() as session:
-                etl_id = session.execute(
+            with engine.connect() as conn:
+                if engine.type == 'sqlite':
+                    return 1
+                etl_id = conn.execute(
                     select(LogEntry.instance_id)
                     .order_by(LogEntry.instance_id.desc())
                 ).fetchone()
@@ -214,13 +216,13 @@ class SQL_mini_wizard:
             conn.execute(text(create_table_query))
 
     @staticmethod
-    def _delete_table():
+    def _delete_table(engine):
         """
         This method deletes the table in the database.
         """
-        engine = create_engine("sqlite:///logs.db")
+        
         with engine.connect() as conn:
-            conn.execute("DROP TABLE logs")
+            conn.execute(text("DROP TABLE logs"))
             conn.commit()
         print("Table deleted")
 
@@ -334,7 +336,7 @@ class Custom_logger(logging.Handler, Singleton):
             start = logs[0][2]
             end = logs[-1][2]
             overall_runtime = (end - start).total_seconds()
-            report["Total runtime"] = f"{overall_runtime / 60:.2f} minutes"
+            report["Total runtime"] = f"{overall_runtime / 60:.1f} minutes"
 
             # Initialize variables
             current_area = None
@@ -359,7 +361,7 @@ class Custom_logger(logging.Handler, Singleton):
                         if sub_entry_start_time is not None:
                             sub_entry_end_time = log_time
                             sub_entry_runtime = (sub_entry_end_time - sub_entry_start_time).total_seconds()
-                            report[current_area]['Entries'][sub_entry_message] = f"{sub_entry_runtime / 60:.2f} minutes"
+                            report[current_area]['Entries'][sub_entry_message] = f"{sub_entry_runtime / 60:.1f} minutes"
 
                     # Update for the new area
                     current_area = area
@@ -376,11 +378,11 @@ class Custom_logger(logging.Handler, Singleton):
                         # Finalize the current sub-entry
                         sub_entry_end_time = log_time
                         sub_entry_runtime = (sub_entry_end_time - sub_entry_start_time).total_seconds()
-                        report[current_area]['Entries'][sub_entry_message] = f"{sub_entry_runtime / 60:.2f} minutes"
+                        report[current_area]['Entries'][sub_entry_message] = f"{sub_entry_runtime / 60:.1f} minutes"
                     else:
                         # First STATUS call is the "Startup" phase
                         startup_runtime = (log_time - area_start_time).total_seconds()
-                        report[current_area]['Entries']['Startup'] = f"{startup_runtime / 60:.2f} minutes"
+                        report[current_area]['Entries']['Startup'] = f"{startup_runtime / 60:.1f} minutes"
 
                     # Start a new sub-entry
                     sub_entry_start_time = log_time
@@ -396,17 +398,17 @@ class Custom_logger(logging.Handler, Singleton):
                 if sub_entry_start_time is not None:
                     sub_entry_end_time = logs[-1][2]
                     sub_entry_runtime = (sub_entry_end_time - sub_entry_start_time).total_seconds()
-                    report[current_area]['Entries'][sub_entry_message] = f"{sub_entry_runtime / 60:.2f} minutes"
+                    report[current_area]['Entries'][sub_entry_message] = f"{sub_entry_runtime / 60:.1f} minutes"
 
         # Convert runtime to string with 2 decimal places
         for area in report:
             if area != "Total runtime":
-                report[area]['Total_runtime'] = f"{report[area]['Total_runtime']:.2f} minutes"
+                report[area]['Total_runtime'] = f"{report[area]['Total_runtime']:.1f} minutes"
 
         # Modify the report format if there are no sub-entries
         for area in list(report.keys()):
             if area != "Total runtime" and not report[area]['Entries']:
-                report[area] = f"{report[area]['Total_runtime']} minutes"
+                report[area] = f"{report[area]['Total_runtime']}"
             elif area != "Total runtime":
                 report[area]['Entries'] = {k: v for k, v in report[area]['Entries'].items()}
 

@@ -1,0 +1,20 @@
+{
+    "__main__": "No Errors",
+    "Candidate_scraper": {
+        "WARNING": {
+            "Count": 1
+        },
+        "ERROR": {
+            "Count": 1
+        }
+    },
+    "Job_scraper": {
+        "WARNING": {
+            "Count": 1
+        },
+        "ERROR": {
+            "Count": 1
+        }
+    },
+    "Good_scraper": "No Errors"
+}

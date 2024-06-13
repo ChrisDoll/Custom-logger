@@ -1,0 +1,13 @@
+{
+    "Total runtime": "0.33 minutes",
+    "__main__": "0.03 minutes minutes",
+    "Candidate_scraper": "0.03 minutes minutes",
+    "Job_scraper": {
+        "Total_runtime": "0.23 minutes",
+        "Entries": {
+            "Startup": "0.03 minutes",
+            "Starting important work": "0.20 minutes"
+        }
+    },
+    "Good_scraper": "0.03 minutes minutes"
+}
